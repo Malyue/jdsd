@@ -20,9 +20,7 @@ First,you should have sth knowledge about Packet capture,using tool like Fiddler
 
 Then you should set you key and email into file `main.go`.(userInfos):key:
 
-If you need the program to send the success or failure email for your mailbox,you should put your mailbox in the variable `emailInfo`
-
-in `main.go`.:email:
+If you need the program to send the success or failure email for your mailbox,you should put your mailbox in the variable `emailInfo` in `main.go`.:email:
 
 Then if you set all the config in the program,and you can execute `go build main.go` to start the program.
 
