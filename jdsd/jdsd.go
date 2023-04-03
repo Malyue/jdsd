@@ -49,6 +49,9 @@ func GetUserInfo(key string) (error, map[string]interface{}) {
 
 	request = addHeader(request)
 	resp, err := client.Do(request)
+	if err != nil {
+		fmt.Println(err)
+	}
 	defer resp.Body.Close()
 
 	resp_body, err := io.ReadAll(resp.Body)
@@ -167,6 +170,11 @@ func Signin(key string) error {
 }
 
 func PVP(key string) error {
+	defer func() {
+		if err := recover(); err != nil {
+			fmt.Println(err)
+		}
+	}()
 	client := &http.Client{}
 	data := url.Values{"route": {"get_counterpart"}, "key": {key}, "counter": {"0"}, "find_type": {"0"}}
 	//add := 0
@@ -222,10 +230,19 @@ func PVP(key string) error {
 		request = addHeader(request)
 		for j := 0; j < 150; j++ {
 			time.Sleep(1)
-			response, _ := client.Do(request)
+			response, err := client.Do(request)
+			if err != nil {
+				continue
+			}
 			jsonMap := make(map[string]interface{})
-			response_body, _ := io.ReadAll(response.Body)
-			err := json.Unmarshal(response_body, &jsonMap)
+			response_body, err := io.ReadAll(response.Body)
+			if err != nil {
+				fmt.Println(err)
+			}
+			if response_body != nil {
+				defer response.Body.Close()
+			}
+			err = json.Unmarshal(response_body, &jsonMap)
 			if err != nil {
 				fmt.Println(err)
 			}
@@ -273,7 +290,7 @@ func PVP(key string) error {
 			return err
 		}
 		response_commit_answer.Body.Close()
-		fmt.Println("完成了第", index, "题")
+		fmt.Println("完成了第", index+1, "题")
 		time.Sleep(1)
 	}
 
@@ -304,7 +321,7 @@ func Exec(key string) (map[string]interface{}, error, error) {
 		return nil, err, errors.New("经典诵读的key已过期，请检查是否输入错误，若确认无误，请重新抓取key并发送给开发者")
 	}
 	fmt.Println(info)
-	// Signin
+	//	Signin
 	err = Signin(key)
 	if err != nil {
 		return nil, err, errors.New("登录错误，请联系开发者提交错误")
@@ -331,6 +348,29 @@ func Exec(key string) (map[string]interface{}, error, error) {
 			return nil, err, errors.New("执行到第" + strconv.Itoa(i+1) + "次pvp出现问题，请检查key或者联系开发者")
 		}
 		fmt.Println("第" + strconv.Itoa(i+1) + "次PVP完成")
+		time.Sleep(3 * time.Second)
+	}
+	// 判断如果未得到30分则再次进行
+	// 次数-10次以内
+	times := 0
+	re := info["re"].(map[string]interface{})
+	for {
+		if times < 3 && fmt.Sprint(re["per_day_credits"]) != "30" {
+			fmt.Println("=================================================")
+			//fmt.Println(re["per_day_credits"])
+			// pvp
+			for i := 0; i < 3; i++ {
+				err = PVP(key)
+				if err != nil {
+					return nil, err, errors.New("执行到第" + strconv.Itoa(i+1) + "次pvp出现问题，请检查key或者联系开发者")
+				}
+				fmt.Println("第" + strconv.Itoa(i+1) + "次PVP完成")
+				time.Sleep(3 * time.Second)
+			}
+			times++
+		} else {
+			break
+		}
 	}
 	// get the info again
 	err, info = GetUserInfo(key)
