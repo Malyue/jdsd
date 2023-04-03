@@ -28,6 +28,6 @@ Then if you set all the config in the program,and you can execute `go build main
 
 ### Tips
 
-- If you have sth knowledge of deploy,you can deploy the program for you  server.
-- But it has sth problem in deploying,if you deploy in docker,it can't run automatically by the gocron,you can try to use `crontab` to controller it.
+- If you have sth knowledge of deploy,you can deploy the program for you server,you can reference the `deploy.sh` to use docker to deploy.
+- But it has sth problem in deploying,if you deploy in docker,it can't run automatically by the gocron,you can try to use `crontab` to controller it(you should change the time in the docker to solve this trouble).
 - The variable `emailInfo` is the info of sender，the receiver's mailbox is set in the variables `userInfos` 
